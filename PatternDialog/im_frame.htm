@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!-- saved from url=(0037)http://im54v4.vk.com/im_frame.php#307 -->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+</head>
+
+<body>
+
+<script type="text/javascript">
+window.Ajax=function(e,g){this.onDone=e;this.onFail=g;var b=!1,c=this;try{new XMLHttpRequest&&(b=function(){return new XMLHttpRequest})}catch(j){try{new ActiveXObject("Msxml2.XMLHTTP")&&(b=function(){return new ActiveXObject("Msxml2.XMLHTTP")})}catch(k){try{new ActiveXObject("Microsoft.XMLHTTP")&&(b=function(){return new ActiveXObject("Microsoft.XMLHTTP")})}catch(l){b=!1}}}this.post=function(e,h){if(!b)return!1;var a=b(),d;d=[];var i=function(a){try{return encodeURIComponent(a)}catch(b){return a}},f;for(f in h)d.push(i(f)+"="+i(h[f]));d=d.join("&");a.onreadystatechange=function(){if(4==a.readyState)if(200<=a.status&&300>a.status){if(c.onDone)c.onDone(c,a.responseText)}else if(c.onFail)c.onFail(c,a.responseText)};try{a.open("POST",e,!0)}catch(g){return!1}a.setRequestHeader("Content-Type","application/x-www-form-urlencoded");a.setRequestHeader("X-Requested-With","XMLHttpRequest");a.send(d);return a}};
+
+var full_domain = location.host;
+var main_domain = location.host.toString().match(/[a-zA-Z]*\.[a-zA-Z]*$/)[0];
+var proto = location.protocol;
+
+
+var ajax_url = proto + '//' + full_domain + '/',
+    request = {url: false, key: false, ts: false, mode: 0, onDone: false, onFail: false};
+
+window.make_frame_request = function() {
+  if (window.im_ajax) {
+    im_ajax.onDone = false;
+    im_ajax.onFail = false;
+  }
+
+  try {
+    document.domain = full_domain;
+  } catch(e) {
+  }
+
+  window.im_ajax = new Ajax();
+  im_ajax.onDone = function(obj, text) {
+    request.onDone(obj, text);
+  }
+  im_ajax.onFail = request.onFail;
+
+  im_ajax.post(ajax_url + request.url, {act: 'a_check', key: request.key, ts: request.ts, wait: 25, mode: request.mode});
+
+  document.domain = main_domain;
+}
+
+function start() {
+  if (window.Ajax) {
+    document.domain = main_domain;
+    try {
+      var parentIM = parent.im || parent.IM, parentCur = parent.cur && parent.cur.key ? parent.cur : parentIM;
+      if (parentIM && parentCur) {
+        parentIM.make_request =
+        parentIM.makeRequest =
+        parentCur.imMakeRequest = function(on_done, on_fail) {
+          if (!parentCur.key) {
+            return;
+          }
+          request.onDone = on_done;
+          request.onFail = on_fail;
+          request.ts = parentCur.ts;
+          request.key = parentCur.key;
+          request.url = parentCur.url;
+          request.mode = parentCur.lpMode || 0;
+
+          setTimeout("make_frame_request()", 0); // Opera 9 hack
+        }
+      } else {
+        setTimeout("window.start()", 100);
+      }
+    } catch (e) {
+      try {
+        document.domain = full_domain;
+      } catch(e) {
+      }
+      setTimeout("window.start()", 100);
+    }
+  } else {
+    setTimeout("window.start()", 100);
+  }
+}
+start();
+
+</script>
+
+
+
+
+</body></html>
