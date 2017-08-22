@@ -2,7 +2,7 @@
 #include "v_parser.h"
 
 /**
-* CURLOPT_WRITEFUNCTION for recieve a response from server.
+* CURLOPT_WRITEFUNCTION recieve a response from server.
 */
 size_t write_callback_request(void *ptr, size_t size, size_t nmemb, struct str *s)
 {
@@ -20,7 +20,7 @@ size_t write_callback_request(void *ptr, size_t size, size_t nmemb, struct str *
 }
 
 /**
-* CURLOPT_WRITEFUNCTION for Download File from server.
+* CURLOPT_WRITEFUNCTION for Download File.
 */
 size_t write_callback_file(void *ptr, size_t size, size_t nmemb, char *file)
 {
@@ -29,7 +29,7 @@ size_t write_callback_file(void *ptr, size_t size, size_t nmemb, char *file)
 }
 
 /**
-* CURLOPT_READFUNCTION for Upload File from server.
+* CURLOPT_READFUNCTION for Upload File.
 */
 size_t read_sent_file(void *ptr, size_t size, size_t nmemb, void *stream)
 {

