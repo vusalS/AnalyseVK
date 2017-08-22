@@ -30,7 +30,7 @@ CURL* curlInitHttp()
 }
 
 /**
-* Send POST request
+* Send GET request
 */
 CURLcode send_request(char* url, struct str* resp, char* cookie, char* data)
 {
