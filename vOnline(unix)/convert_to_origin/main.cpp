@@ -28,7 +28,7 @@ int main()
 	getline(ifs, buf);
 	while (!ifs.eof())
 	{
-		found = buf.find_first_of(" ");
+		found = buf.find_last_of(" ");
 		ofs_t.write(buf.c_str(), found); ofs_t << '\n';
 		ofs_s.write(buf.c_str() + found + 1, 1); ofs_s << '\n';
 		getline(ifs, buf);
