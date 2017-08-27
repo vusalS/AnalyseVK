@@ -2,20 +2,20 @@
 #include "curl.h"
 
 
-void read_user(user& _user)
+void read_user(user& u)
 {
 	string str;
 	ifstream file;
 
-	file.open(USER_PATH);
+	file.open(SOURCE_PATH);
 	if (!file.is_open()) {
 		fprintf(stderr, "fopen failed: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
 	getline(file, str);
-	_user.set_id(str);
-	_user.set_name("NONE");
+	u.set_id(str);
+	u.set_name("NONE");
 
 }
 
@@ -49,17 +49,8 @@ bool get_status(const string& id, string& text, time_t& time_reply)
 	snprintf(url, MAX_LENGTH_URL, "http://vk.com/id%s", id.c_str());
 	send_request(url, &resp, NULL, "");
 
-	time_reply = time(&time_reply);
+	time(&time_reply);
 	buf = strstr(resp.ptr, "<div id=\"profile_time_lv\">");
-
-
-	/*char fname[MAX_PATH] = { 0 };
-	struct tm* t = localtime(&time_reply);
-	t->tm_hour;
-	snprintf(fname, MAX_PATH, "%02i_%02i_%02i", t->tm_hour, t->tm_min, t->tm_sec);
-	FILE* f = fopen(fname, "wb");
-	fprintf(f, "%s", resp.ptr);
-	fclose(f);*/
 
 
 	if (buf == NULL) {
@@ -125,12 +116,13 @@ void print(user& u)
 	FILE*		file;
 	struct tm*	time;
 
-	snprintf(fname, MAX_PATH, "%s", u.name.c_str());
+	snprintf(fname, MAX_PATH, "%s/%s", RESULT_PATH, u.name.c_str());
 	file = fopen(fname, "wb");
 	fprintf(file, "%s | %s\n", u.name.c_str(), u.id.c_str());
 	for (int n = 0; n < u.act_size; n++) {
 		time = localtime(&u.act[n].rawtime);
-		fprintf(file, "%02i:%02i:%02i ", time->tm_hour, time->tm_min, time->tm_sec);
+		fprintf(file, "%02i:%02i:%02i %02i.%02i.%02i ", time->tm_hour, time->tm_min, time->tm_sec, 
+									time->tm_mday, time->tm_mon+1, time->tm_year+1900);
 		if (u.act[n].status) fprintf(file, "1");
 		else fprintf(file, "0");
 		fprintf(file, "\n");

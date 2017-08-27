@@ -9,13 +9,14 @@
 #include <ctime>
 #include <iostream>
 #include <unistd.h>
+#pragma warning(disable:4996)
 
 #ifndef MAX_PATH
 #define MAX_PATH 260
 #endif
 
 #define MAX_SIZE_COMMAND				128
-#define MAX_LENGTH_URL					256
+#define MAX_LENGTH_URL				256
 #define MAX_LENGTH_USERID				16
 #define MAX_LENGTH_USERNAME				32
 #define MAX_LENGTH_FORMDATA				128
@@ -23,8 +24,9 @@
 #define PAUSE_MS					60000000
 
 #define VK_RESPONSE_NOT_FOUND			"HTTP/1.1 404 Not Found"
-#define VK_RESPONSE_OK					"HTTP/1.1 200 OK"
-#define USER_PATH						"UsersID.txt"
+#define VK_RESPONSE_OK				"HTTP/1.1 200 OK"
+#define SOURCE_PATH				"UsersID.txt"
+#define RESULT_PATH					"result"
 using namespace std;
 
 struct user
@@ -91,4 +93,5 @@ bool get_status(const string&, time_t&);
 string get_name(const char*);
 int analyse(user&);
 void print(user&);
+int convert_to_graph(string);
 #endif
