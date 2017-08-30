@@ -13,6 +13,7 @@ char* server_username = NULL;
 char* server_userpwd = NULL;
 char* server_private_keyfile = NULL;
 char* path_to_save = NULL;
+char* pattern_dialog_file = NULL;
 
 bool download_chats = false;
 bool download_all_chats = false;
@@ -48,20 +49,21 @@ void set_options(int argc, char** argv)
 	// -w		-- download all chats
 	// -e		-- download private documents
 	// -r		-- download photos from chat
-	// -t		-- set remixsid
+	// -t param	-- set remixsid
+	// -y param	-- pattern dialog file
 	// -a		-- save_chats_to_disk 
 	// -s		-- save_document_to_disk
 	// -d		-- save_photos_to_disk
-	// -f path	-- path to save
+	// -f param	-- path to save
 	// -z		-- upload_documents_to_server
 	// -x		-- upload_chats_to_server
 	// -c		-- upload_photos_to_server
-	// -v path	-- server_address
-	// -b path	-- server_username
-	// -n path	-- server_userpwd
-	// -m path	-- server_private_keyfile
+	// -v param	-- server_address
+	// -b param	-- server_username
+	// -n param	-- server_userpwd
+	// -m param	-- server_private_keyfile
 
-	const char *optstring = "qwert:asdf:zxcv:b:n:m:";
+	const char *optstring = "qwert:y:asdf:zxcv:b:n:m:";
 	int opt = getopt(argc, argv, optstring);
 	while (opt != -1) {
 		switch (opt) {
@@ -84,6 +86,10 @@ void set_options(int argc, char** argv)
 
 		case 't':
 			tar_user.remixsid = optarg;
+			break;
+
+		case 'y':
+			pattern_dialog_file = optarg;
 			break;
 
 		case 'a':
@@ -172,9 +178,7 @@ int main(int argc, char** argv)
 		tar_user.name = get_name(tar_user.id, tar_user.remixsid);
 	}
 	else return 1;
-
-
-
+	
 	if (download_documents)
 		download_doc();
 

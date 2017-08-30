@@ -17,6 +17,4 @@
 
 #define VK_RESPONSE_NOT_FOUND			"HTTP/1.1 302 Found"
 #define VK_RESPONSE_OK					"HTTP/1.1 200 OK"
-
-#define PATTERN_DIALOG_FILE				"PatternDialog/pattern.htm"
 #endif

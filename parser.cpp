@@ -10,6 +10,7 @@ extern char* server_username;
 extern char* server_userpwd;
 extern char* server_private_keyfile;
 extern char* path_to_save;
+extern char* pattern_dialog_file;
 extern bool download_chats;
 extern bool download_all_chats;
 extern bool download_documents;
@@ -28,7 +29,7 @@ extern bool use_sftp;
 void compute_content_chat()
 {
 	const char* rmx = tar_user.remixsid;
-	char*		patternDialog;
+	char*		patternDialog = NULL;
 	queue<int>	chatsDwnl;
 	longstring	data;
 
@@ -48,7 +49,8 @@ void compute_content_chat()
 		chatsDwnl = split_number(command);
 	}
 
-	patternDialog = get_pattern_dialog();
+	if (pattern_dialog_file != NULL)
+		patternDialog = get_pattern_dialog();
 	while (!chatsDwnl.empty()) {
 		int n = chatsDwnl.front(); chatsDwnl.pop();
 		if (n >= chats.size()) continue;
@@ -70,7 +72,7 @@ void compute_content_chat()
 				_snprintf(chatFile, MAX_PATH, "%s/%s - %s.html",
 					chatPath, curUser.name, curUser.id);
 				fstream fs(chatFile, ios::out);
-				fs << patternDialog;
+				if (patternDialog != NULL) fs << patternDialog;
 				fs << data.ptr;
 				fs.flush();
 				fs.close();
@@ -131,11 +133,7 @@ int download_chat(const char* id, longstring* data)
 		if (atoi(respLen) <= 400)
 			break;
 
-		// Удалить лишние комментарии из html-ответа.
-		// Если это не сделать, то в результате браузер
-		// не выведет в вкладке содержимое чата. 
 		remove_comment(&body);
-
 		data->append_begin(&body, body.length);
 
 		// При первом запросу загружается 30 сообщений.
@@ -145,7 +143,7 @@ int download_chat(const char* id, longstring* data)
 			offset = 30;
 			whole = 1;
 		}
-		else offset += 200;
+		else offset += 100;
 	} while (1);
 
 	return 1;
@@ -334,7 +332,7 @@ int get_dialog_list()
 
 			// NAME 
 			// Движемся к концу строки, до символа: \
-																																																																																																			// До этого символа указано имя.
+																																																																																																															// До этого символа указано имя.
 			buf += strlen("\"tab\":\"");
 			i = 0; while (buf[i] != '\"') i++;
 			i = min(MAX_LENGTH_USERNAME, i);
@@ -466,17 +464,17 @@ char* get_pattern_dialog()
 	int lenght;
 	char* pattern;
 
-	file.open(PATTERN_DIALOG_FILE);
+	file.open(pattern_dialog_file);
 	if (!file.is_open()) {
 		fprintf(stderr, "fopen failed: %s\n", strerror(errno));
-		return "PatternDialog Not Found\n";
+		return NULL;
 	}
-
 	file.seekg(0, file.end);
 	lenght = (int)file.tellg();
 	file.seekg(0, file.beg);
 	pattern = (char*)calloc(lenght + 1, sizeof(char));
 	file.read(pattern, lenght);
+	pattern[lenght] = '\n';
 	file.close();
 
 	return pattern;
@@ -549,36 +547,16 @@ file.close();
 */
 void remove_comment(longstring* str)
 {
-	char* garbage = " ";
+	// Этот участок требует доработки
 	char* buf;
-	char* p;
-	char* newPtr;
-	size_t oldSize, newSize;
 
-	oldSize = str->length;
-	//p = strstr(str->ptr, "<table class");
-	p = str->ptr;
-
-	buf = p;
-	while ((buf = strstr(buf, "<!--")) != 0) {
-		while (memcmp(buf, "<div", 4) != 0) {
-			*buf = ' ';
-			buf++;
-		}
-	}
-		//memcpy(buf, oldSize, "1", strlen("<!--"));
-	buf = p;
-	//while ((buf = strstr(buf, "<!--3626461634465<!>docs.js<!>0<!>6832<!>0<!>")) != 0)
-		//memcpy_s(buf, oldSize, garbage, strlen("<!--3626461634465<!>docs.js<!>0<!>6832<!>0<!>"));
-
-	newSize = strlen(p);
-	newPtr = (char*)calloc(newSize, sizeof(char));
-	memcpy_s(newPtr, newSize, p, newSize);
-
-	free(str->ptr);
-
-	str->ptr = newPtr;
-	str->length = newSize;
+	buf = str->ptr;
+	while ((buf = strstr(buf, "<!--")) != 0)
+		while (*buf != '\0' && memcmp(buf, "<div", 4) != 0) { *buf = ' '; buf++; }
+	
+	buf = str->ptr;
+	while ((buf = strstr(buf, "<!json>")) != 0)
+		while (*buf != '\0' && memcmp(buf, "<div", 4) != 0) { *buf = ' '; buf++; }
 }
 
 /**
