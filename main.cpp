@@ -15,22 +15,22 @@ char* server_private_keyfile = NULL;
 char* path_to_save = NULL;
 char* pattern_dialog_file = NULL;
 
-bool download_chats = false;
-bool download_all_chats = false;
-bool download_documents = false;
-bool download_photos_from_chat = false;
-bool save_chats_to_disk = false;
-bool save_document_to_disk = false;
-bool save_photos_to_disk = false;
-bool upload_documents_to_server = false;
-bool upload_chats_to_server = false;
-bool upload_photos_to_server = false;
-bool use_sftp = true;
+bool download_chats				= 1;
+bool download_all_chats			= 0;
+bool download_documents			= 0;
+bool download_photos_from_chat	= 0;
+bool save_chats_to_disk			= 1;
+bool save_document_to_disk		= 0;
+bool save_photos_to_disk		= 0;
+bool upload_documents_to_server = 0;
+bool upload_chats_to_server		= 0;
+bool upload_photos_to_server	= 0;
+bool use_sftp					= 0;
 
 extern char *optarg;
 extern int optind, opterr, optopt;
 
-struct user tar_user;
+struct user tuser;
 vector<user> chats;
 HANDLE hConsole;
 
@@ -85,7 +85,7 @@ void set_options(int argc, char** argv)
 			break;
 
 		case 't':
-			tar_user.remixsid = optarg;
+			tuser.remixsid = optarg;
 			break;
 
 		case 'y':
@@ -151,19 +151,18 @@ void set_options(int argc, char** argv)
 
 	if (server_address == NULL || server_username == NULL || server_userpwd == NULL)
 	{
-		upload_documents_to_server = false;
-		upload_chats_to_server = false;
-		upload_photos_to_server = false;
+		upload_documents_to_server = 0;
+		upload_chats_to_server = 0;
+		upload_photos_to_server = 0;
 	}
 
 	if (server_private_keyfile == NULL)
-		use_sftp = false;
+		use_sftp = 0;
 
-	if (path_to_save == NULL)
-	{
-		save_chats_to_disk = false;
-		save_document_to_disk = false;
-		save_photos_to_disk = false;
+	if (path_to_save == NULL) {
+		save_chats_to_disk = 0;
+		save_document_to_disk = 0;
+		save_photos_to_disk = 0;
 	}
 
 };
@@ -173,9 +172,9 @@ int main(int argc, char** argv)
 	setlocale(LC_ALL, "Russian");
 	set_options(argc, argv);
 
-	if (tar_user.remixsid != NULL) {
-		tar_user.id = get_id(tar_user.remixsid);
-		tar_user.name = get_name(tar_user.id, tar_user.remixsid);
+	if (tuser.remixsid != NULL) {
+		tuser.id = get_id(tuser.remixsid);
+		tuser.name = get_name(tuser.id, tuser.remixsid);
 	}
 	else return 1;
 	

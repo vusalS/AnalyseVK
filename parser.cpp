@@ -3,8 +3,9 @@
 #include "localdef.h"
 
 extern vector<user> chats;
-extern struct user tar_user;
+extern struct user tuser;
 extern HANDLE hConsole;
+
 extern char* server_address;
 extern char* server_username;
 extern char* server_userpwd;
@@ -28,17 +29,15 @@ extern bool use_sftp;
 */
 void compute_content_chat()
 {
-	const char* rmx = tar_user.remixsid;
-	char*		patternDialog = NULL;
-	queue<int>	chatsDwnl;
-	longstring	data;
+	char*			patternDialog = NULL;
+	vector<user>	chats_for_dwnl;
+	longstring		data;
 
 	get_dialog_list();
 	print_users(&chats);
 
 	if (download_all_chats)
-		for (int i = 0; i < chats.size(); i++)
-			chatsDwnl.push(i);
+		chats_for_dwnl = chats;
 	else {
 		char command[MAX_SIZE_COMMAND];
 		printfc(12, ">> ");
@@ -46,31 +45,35 @@ void compute_content_chat()
 			gets_s(command, MAX_SIZE_COMMAND);
 			fflush(stdin);
 		} while (!isNumber(command));
-		chatsDwnl = split_number(command);
+
+		vector<int> num = split_number(command);
+		for (int i = 0; i < num.size(); i++)
+			if (num[i] < chats.size())
+				chats_for_dwnl.push_back(chats[num[i]]);
 	}
 
 	if (pattern_dialog_file != NULL)
 		patternDialog = get_pattern_dialog();
-	while (!chatsDwnl.empty()) {
-		int n = chatsDwnl.front(); chatsDwnl.pop();
-		if (n >= chats.size()) continue;
-		struct user curUser = chats.at(n);
 
+	for (int i = 0; i < chats_for_dwnl.size(); i++)
+	{
+		struct user& u = chats_for_dwnl[i];
 		clearscr();
-		curUser.status = "Downloading...\0";
-		print_users(&chats);
+
+		u.status = "Downloading...\0";
+		print_users(&chats_for_dwnl);
 
 		// Download Chat
-		if (download_chat(curUser.id, &data)) {
+		if (download_chat(u.id, &data)) {
 			if (save_chats_to_disk)
 			{
 				char chatPath[MAX_PATH] = { 0 };
 				char chatFile[MAX_PATH] = { 0 };
 				_snprintf(chatPath, MAX_PATH, "%s/%s - %s",
-					path_to_save, curUser.name, curUser.id);
+					path_to_save, tuser.name, tuser.id);
 				mmkdir(chatPath);
 				_snprintf(chatFile, MAX_PATH, "%s/%s - %s.html",
-					chatPath, curUser.name, curUser.id);
+					chatPath, u.name, u.id);
 				fstream fs(chatFile, ios::out);
 				if (patternDialog != NULL) fs << patternDialog;
 				fs << data.ptr;
@@ -83,13 +86,14 @@ void compute_content_chat()
 					upload_file_sftp(server_address, server_username, server_private_keyfile, &data);
 				else upload_file_ftp(server_address, server_username, server_userpwd, &data);
 
-				// Download photo from chat. ПОРАБОТАТЬ
-				//if (download_photos_from_chat)
-				//	download_photo(data.ptr, "111");
+			// Download photo from chat. ПОРАБОТАТЬ
+			//if (download_photos_from_chat)
+			//	download_photo(data.ptr, "111");
 		}
+
 		clearscr();
-		chats[n].status = "YES\0";
-		print_users(&chats);
+		u.status = "YES\0";
+		print_users(&chats_for_dwnl);
 		data.clear();
 	}
 
@@ -101,7 +105,7 @@ void compute_content_chat()
 */
 int download_chat(const char* id, longstring* data)
 {
-	const char* rmx = tar_user.remixsid;
+	const char* rmx = tuser.remixsid;
 	char		url[MAX_LENGTH_URL] = { 0 };
 	char		cookie[MAX_LENGTH_COOKIE] = { 0 };
 	char		formdata[MAX_LENGTH_FORMDATA] = { 0 };
@@ -224,7 +228,7 @@ int download_photo(const char* dialogHtml, const char* path)
 * Return number success download document.
 */
 int download_doc() {
-	const char* rmx = tar_user.remixsid;
+	const char* rmx = tuser.remixsid;
 	char		url[MAX_LENGTH_URL] = { 0 };
 	char		cookie[MAX_LENGTH_COOKIE] = { 0 };
 	char*		buf;
@@ -295,7 +299,6 @@ int download_doc() {
 */
 int get_dialog_list()
 {
-	const char* rmx = tar_user.remixsid;
 	char		url[MAX_LENGTH_URL] = { 0 };
 	char		cookie[MAX_LENGTH_COOKIE] = { 0 };
 	char		formdata[MAX_LENGTH_FORMDATA] = { 0 };
@@ -308,7 +311,7 @@ int get_dialog_list()
 
 	do {
 		_snprintf(url, MAX_LENGTH_URL, "https://vk.com/al_im.php");
-		_snprintf(cookie, MAX_LENGTH_COOKIE, "remixsid=%s", rmx);
+		_snprintf(cookie, MAX_LENGTH_COOKIE, "remixsid=%s", tuser.remixsid);
 		_snprintf(formdata, MAX_LENGTH_FORMDATA, "act=a_get_dialogs&al=1&gid=0&offset=%d&tab=all", offset);
 		send_request_safety(url, cookie, formdata, &header, &body);
 
@@ -325,31 +328,29 @@ int get_dialog_list()
 			break;
 
 		buf = body.ptr;
-		while (buf = strstr(buf, "\"tab\":\""))
+		while (buf = strstr(buf, "\"peerId\":"))
 		{
 			struct user user;
 			int			i;
 
-			// NAME 
-			// Движемся к концу строки, до символа: \
-																																																																																																															// До этого символа указано имя.
-			buf += strlen("\"tab\":\"");
-			i = 0; while (buf[i] != '\"') i++;
-			i = min(MAX_LENGTH_USERNAME, i);
-			user.name = new char[i + 1];
-			memcpy_s(user.name, MAX_LENGTH_USERNAME, buf, i);
-			user.name[i] = '\0';
-
 			// ID
 			// В html-ответе ищем строчку: "peerId":
 			// где указан ID.
-			buf = strstr(buf, "\"peerId\":");
 			buf += strlen("\"peerId\":");
 			i = 0; while (buf[i] != ',') i++;
 			i = min(MAX_LENGTH_USERID, i);
 			user.id = new char[i + 1];
-			memcpy_s(user.id, MAX_LENGTH_USERID, buf, i);
+			memcpy_s(user.id, i + 1, buf, i);
 			user.id[i] = '\0';
+
+			// NAME
+			buf = strstr(buf, "\"tab\":\"");
+			buf += strlen("\"tab\":\"");
+			i = 0; while (buf[i] != '\"') i++;
+			i = min(MAX_LENGTH_USERNAME, i);
+			user.name = new char[i + 1];
+			memcpy_s(user.name, i + 1, buf, i);
+			user.name[i] = '\0';
 
 			// TIME LAST MESSAGE
 			// В том же классе (<td class="dialogs_info">)
@@ -553,7 +554,7 @@ void remove_comment(longstring* str)
 	buf = str->ptr;
 	while ((buf = strstr(buf, "<!--")) != 0)
 		while (*buf != '\0' && memcmp(buf, "<div", 4) != 0) { *buf = ' '; buf++; }
-	
+
 	buf = str->ptr;
 	while ((buf = strstr(buf, "<!json>")) != 0)
 		while (*buf != '\0' && memcmp(buf, "<div", 4) != 0) { *buf = ' '; buf++; }
@@ -584,24 +585,23 @@ bool isNumber(const char* text)
 * If string content nonnumber symbol - return empty queue.
 * Else - return queue with divided number.
 */
-queue<int> split_number(const char* text)
+vector<int> split_number(const char* text)
 {
-	queue<int> intsplit_number;
-	const size_t n = 4;
+	vector<int> intsplit_number;
+	string num;
 
-	char number[n] = { 0 };
 	for (int i = 0; text[i] != NULL; i++)
 	{
 		if (text[i] >= 48 && text[i] <= 57)
-			number[i] = text[i];
+			num += text[i];
 		else if (text[i] == ' ') {
-			intsplit_number.push(atoi(number));
-			memset(number, '\0', n);
+			intsplit_number.push_back(atoi(num.c_str()));
+			num.clear();
 			text += i + 1;
 			i = -1;
 		}
 	}
-	intsplit_number.push(atoi(number));
+	intsplit_number.push_back(atoi(num.c_str()));
 
 	return intsplit_number;
 }

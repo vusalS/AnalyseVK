@@ -122,7 +122,7 @@ char* get_pattern_dialog(void);
 
 void remove_comment(longstring*);
 bool isNumber(const char*);
-queue<int> split_number(const char*);
+vector<int> split_number(const char*);
 
 void cin_command();
 void print_users(vector<user>*);
