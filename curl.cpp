@@ -210,7 +210,6 @@ CURLcode upload_file_sftp(const char* address, const char* username, const char*
 	char url[MAX_LENGTH_URL] = { 0 };
 	CURL* curl = curl_easy_init();
 	CURLcode rv;
-	FILE *file;
 
 	_snprintf(url, MAX_LENGTH_URL, "sftp://%s/Documents/", address);
 
@@ -241,7 +240,6 @@ CURLcode upload_file_ftp(const char* address, const char* username, const char* 
 	char url[MAX_LENGTH_URL] = { 0 };
 	CURL* curl = curl_easy_init();
 	CURLcode rv;
-	FILE *file;
 
 	_snprintf(url, MAX_LENGTH_URL, "ftp://%s/Documents/", address);
 	_snprintf(name_and_pwd, MAX_LENGTH_USERNAME + MAX_LENGTH_PWD + 2, "%s:%s", username, userpwd);
